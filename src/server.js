@@ -3,6 +3,7 @@ import bodyParser from "body-parser"
 import viewEngine from "./config/viewEngine"
 import initWebRoutes from "./route/web"
 import mongoose from "mongoose"
+import session from "express-session"
 const { Schema } = mongoose;
 require("dotenv").config()
 let app = express();
@@ -34,6 +35,12 @@ var UserSchema = new mongoose.Schema({
     mail: String,
     pw: String
 })
+
+app.use(session({
+  secret: 'your-secret-key',
+  resave: true,
+  saveUninitialized: true
+}));
 
 var UserModel = mongoose.model('users', UserSchema);
 
@@ -69,8 +76,12 @@ var userLogin
 app.post('/login', async (req, res) => {
     mail = req.body.mail
     pw = req.body.pw
-    const user = await UserModel.find({mail: mail, pw: pw})
-    userLogin = user
+    const user = await UserModel.findOne({mail: mail, pw: pw})
+    if(!user){
+        return res.status(401).send("Username or password is incorrect")
+    }
+    req.session.user = mail;
+    res.send('Logged in successfully');
 })
 
 let port = process.env.PORT || 6969
