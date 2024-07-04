@@ -15,7 +15,9 @@ let initWebRoutes = (app) => {
         res.render('home')
     })
 
-    
+    app.get("/sign-in", (req, res) => {
+        res.render('home')
+    })
 }
 
 module.exports = initWebRoutes;

@@ -22,6 +22,7 @@ const connectDB = async () => {
     try {
         con = await mongoose.connect(process.env.Mongoose_URL, {});
         console.log('Connected to mongoDB')
+        console.log()
         
     } catch (error) {
         console.log(error)
@@ -36,11 +37,13 @@ var UserSchema = new mongoose.Schema({
     pw: String
 })
 
+
 app.use(session({
-  secret: 'your-secret-key',
-  resave: true,
-  saveUninitialized: true
-}));
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}))
 
 var UserModel = mongoose.model('users', UserSchema);
 
@@ -65,15 +68,13 @@ app.get("/", async (req, res) => {
             message: "Ko tim thay san pham",
         })
     }
-    return res.status(200).json({
-        message: "Tim thay",
-        data: users
-    })
+    
+    return res.status(200).json(users)
 })
 
 var mail, pw
 var userLogin
-app.post('/login', async (req, res) => {
+app.post('/login', async (req, res, next) => {
     mail = req.body.mail
     pw = req.body.pw
     const user = await UserModel.findOne({mail: mail, pw: pw})
@@ -81,7 +82,26 @@ app.post('/login', async (req, res) => {
         return res.status(401).send("Username or password is incorrect")
     }
     req.session.user = mail;
-    res.send('Logged in successfully');
+    res.json(req.session)
+    next()
+})
+
+app.post('/sign-in', (req, res, next) => {
+    mail = req.body.mail
+    pw = req.body.pw
+    const user = new UserModel({
+        mail: req.body.mail,
+        pw: req.body.pw
+    })
+
+    UserModel.insertMany(user)
+    console.log(user)
+    next()
+})
+
+
+app.get('/set', (req, res) => {
+    res.json(req.session)
 })
 
 let port = process.env.PORT || 6969
